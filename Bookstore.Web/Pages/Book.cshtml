@@ -1,0 +1,203 @@
+﻿@page "{id:int}"
+@model Bookstore.Web.Pages.BookModel
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Google Books Embedded Viewer API Example</title>
+    <script type="text/javascript" src="https://www.google.com/books/jsapi.js"></script> 
+   
+    <script type="text/javascript">
+        google.books.load();
+
+        function initialize(isbn) {
+            var viewer = new google.books.DefaultViewer(document.getElementById('viewerCanvas'));
+            viewer.load('ISBN:' + isbn, function () {
+                // if (viewer.getBookType() === 'none') {
+                //     alertNotFound();
+                // }
+            });
+        }
+
+        function alertNotFound() {
+            alert("Could not embed the book!");
+        }
+
+        google.books.setOnLoadCallback(function () {
+            // Example: Get the ISBN from an HTML element with id "isbnInput"
+            var isbnInput = document.getElementById('isbnInput');
+            if (isbnInput) {
+                var isbn = isbnInput.value;
+                initialize(isbn);
+            } else {
+                alert("ISBN input element not found!");
+            }
+        });
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Function to search for YouTube videos based on book title
+            function searchYouTubeVideos(bookTitle) {
+                var apiKey = 'AIzaSyC_KSD7rol4YtJhuSFRVBQ1UmeWQ6ZIHks';
+                var apiUrl = 'https://www.googleapis.com/youtube/v3/search';
+                var maxResults = 3; // Maximum number of videos to retrieve
+
+                // Make API request
+                $.get(apiUrl, {
+                    key: apiKey,
+                    q: bookTitle + ' book', // Add 'book' to the search query for more relevant results
+                    part: 'snippet',
+                    type: 'video',
+                    maxResults: maxResults
+                }, function (data) {
+                    // Process API response
+                    if (data.items) {
+                        // Clear existing videos
+                        $('#youtubeVideos').empty();
+
+                        // Iterate through retrieved videos
+                        $.each(data.items, function (index, item) {
+                            var videoId = item.id.videoId;
+                            var title = item.snippet.title;
+                            var thumbnailUrl = item.snippet.thumbnails.medium.url;
+
+                            // Generate HTML for embedding YouTube video
+                            var videoHtml = '<div>';
+                            videoHtml += '<h3>' + title + '</h3>';
+                            videoHtml += '<iframe width="560" height="315" src="https://www.youtube.com/embed/' + videoId + '" frameborder="0" allowfullscreen></iframe>';
+                            videoHtml += '</div>';
+
+                            // Append video HTML to the container
+                            $('#youtubeVideos').append(videoHtml);
+                        });
+                    }
+                });
+            }
+                // Call searchYouTubeVideos function with the book title
+                searchYouTubeVideos("@Model.Book?.Title");
+        });
+    </script>
+
+</head>
+<body>
+     <div id="viewerCanvas" style="width: 600px; height: 500px"></div>
+    <div id="youtubePlayer"></div>
+</body>
+</html>
+
+<div class="row">
+    <div class="col-md-3">
+        @if (Model.Book?.CoverImage != null)
+        {
+            <img src="@($"data:image/png;base64,{Convert.ToBase64String(Model.Book.CoverImage)}" )" />
+        }
+        else
+        {
+            <img src="~/images/placeholder.png" />
+        }
+    </div>
+    <div class="col-md-9">
+        <h2>@Model.Book?.Title</h2>
+        <p>@Model.Book?.Description</p>
+        <p>Цена: @Model.Book?.Price</p>
+        <input type="hidden" id="isbnInput" value="@Model.Book?.ISBN"/>
+        <form method="post">
+            <input type="hidden" name="bookId" value="@Model.Book?.Id" />
+            <button class="btn btn-primary">Add to cart</button>
+        </form>
+    </div>
+</div>
+<table class="table">
+    <tbody>
+        <tr>
+            <td>Издател</td>
+            <td>@Model.Book?.Publisher</td>
+        </tr>
+        <tr>
+            <td>ISBN</td>
+            <td>@Model.Book?.ISBN</td>
+        </tr>
+        <tr>
+            <td>Година</td>
+            <td>@Model.Book?.PublishingYear</td>
+        </tr>
+        <tr>
+            <td>Език</td>
+            <td>@Model.Book?.Language?.Name</td>
+        </tr>
+        <tr>
+            <td>Автори</td>
+            <td>
+                <ul>
+                    @foreach (var author in Model.Book!.Authors!)
+                    {
+                        <li>@author.FullName</li>
+                    }
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td>Жанрове</td>
+            <td>
+                <ul>
+                    @foreach (var genre in Model.Book.Genres!)
+                    {
+                        <li>@genre.Name</li>
+                    }
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="row">
+    <div class="col-9">
+        <h3>Details from OpenLibrary:</h3>
+        <ul>
+@*             <li>
+                <strong>
+                    Publishing date:
+                </strong>@Model.OpenLibraryDetails!.PublishDate
+            </li> *@
+            <li>
+                <strong>Publishing place: </strong>@string.Join(", ",
+                Model.OpenLibraryDetails!.PublishPlaces!.Select(x => x.Name))
+            </li>
+            <li>
+                <strong>
+                    Number of pages:
+                </strong>@Model.OpenLibraryDetails.NumberOfPages
+            </li>
+        </ul>
+    </div>
+    <div class="col-3">
+        Cover from OpenLibrary:
+        <img src="@Model.OpenLibraryDetails.Cover.Medium" alt="Book cover"
+             style="width: 100%" />
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-9">
+        <h3>Детайли от Google Books:</h3>
+        <ul>
+            <li>
+                <strong>
+                    Издател:
+                </strong>@Model.GoogleDetails!.VolumeInfo.Publisher
+            </li>
+            <li>
+                <strong>
+                    Описание:
+                </strong>@Model.GoogleDetails.VolumeInfo.Description
+            </li>
+            <li>
+                <a href="@Model.GoogleDetails.VolumeInfo.PreviewLink.ToString()"
+                   target="_blank">Прегледайте книгата в Google Books</a>
+            </li>
+        </ul>
+    </div>
+</div>
+

@@ -1,0 +1,48 @@
+﻿@page
+@model Bookstore.Web.Pages.PaymentResponseModel
+@{
+}
+
+@section Scripts
+{
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('pk_test_51OtqA2EShR09FPvoPTuhWjtBKlCsHDsSYVGRelNUlxNCFf1vRtB7N6GGYLDAs44ZtYrVdvHktIxPAEwD8t4Hq1Wt00JO2M8jpK');
+        const clientSecret = new URLSearchParams(window.location.search).get(
+            'payment_intent_client_secret'
+        );
+        stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+            const message = document.querySelector('#message')
+            switch (paymentIntent.status) {
+                case 'succeeded':
+                    message.innerText = 'Успешно плащане.';
+                    message.classList.add('alert-success');
+                    break;
+                case 'processing':
+                    message.innerText = "Плащането все още се обработва.";
+                    message.classList.add('alert-info');
+                    break;
+                case 'requires_payment_method':
+                    message.innerText = 'Грешка при плащането. Моля, опитайте отново.';
+                    message.classList.add('alert-error');
+                    document.querySelector('#back-to-payment').style.display =
+                        'block';
+                    break;
+                default:
+                    message.innerText = 'Възникна грешка, опитайте отново или се свържете с нас.';
+                    message.classList.add('alert-error');
+                    document.querySelector('#back-to-payment').style.display =
+                        'block';
+                    break;
+            }
+        });
+    </script>
+}
+<div class="row">
+    <div class="col-12">
+        <div id="message" class="alert" role="alert">
+        </div>
+        <a asp-page="Payment" id="back-to-payment" class="btn btn-info"
+           style="display: none;">Връщане към страницата за плащане</a>
+    </div>
+</div>

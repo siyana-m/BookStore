@@ -1,0 +1,57 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+@*<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>*@
+
+<form method="get">
+    <div class="form-group row">
+        <div class="col-md-6">
+            <input type="text" class="form-control" asp-for="SearchTerm"
+                   placeholder="Търсене...">
+        </div>
+        <div class="col-md-6">
+            <button type="submit" class="btn btn-primary">Търси</button>
+        </div>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Заглавие</th>
+            <th>Описание</th>
+            <th>Цена</th>
+            <th>Издател</th>
+            <th>ISBN</th>
+            <th>Година</th>
+            <th>Език</th>
+            <th>Автор/и</th>
+            <th>Жанрове</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model.Books)
+        {
+            <tr>
+                <td><a asp-page="Book" asp-route-id="@book.Id">@book.Title</a></td>
+                <td>@book.Description</td>
+                <td>@book.Price</td>
+                <td>@book.Publisher</td>
+                <td>@book.ISBN</td>
+                <td>@book.PublishingYear</td>
+                <td>@book.Language.Name</td>
+                <td>
+                    @string.Join(", ", book.Authors.Select(a =>
+                a.FullName))
+                </td>
+                <td>@string.Join(", ", book.Genres.Select(g => g.Name))</td>
+            </tr>
+        }
+    </tbody>
+</table>

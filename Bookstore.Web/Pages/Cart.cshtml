@@ -1,0 +1,42 @@
+﻿@page
+@model Bookstore.Web.Pages.CartModel
+@{
+    ViewData["Title"] = "Cart";
+}
+
+@if (Model.Order != null)
+{
+    <h1 class="my-4">@ViewData["Title"]</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Книга</th>
+                <th>Количество</th>
+                <th>Цена</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var detail in Model.Order.OrderDetails)
+            {
+                <tr>
+                    <td>@detail.Book.Title</td>
+                    <td>@detail.Quantity</td>
+                    <td>@((detail.Quantity * detail.UnitPrice).ToString("C2"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="text-right">
+        <h4>
+            Общо: @Model.Order.OrderDetails.Sum(d => d.Quantity *
+               d.UnitPrice).ToString("C2")
+        </h4>
+    </div>
+    <div class="text-right">
+        <a class="btn btn-primary" href="/Payment">Продължи към плащане</a>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Не е открита поръчка</div>
+}
